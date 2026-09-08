@@ -1,0 +1,5 @@
+import { Tabs } from 'expo-router';
+import { CalendarDays, CheckSquare, FolderKanban, House, MoreHorizontal } from 'lucide-react-native';
+import { useTheme } from '@/components/ui';
+const icons = { index: House, projects: FolderKanban, tasks: CheckSquare, calendar: CalendarDays, more: MoreHorizontal };
+export default function TabLayout() { const c = useTheme(); return <Tabs screenOptions={({ route }) => ({ headerStyle: { backgroundColor: c.surface }, headerTintColor: c.text, tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.border }, tabBarActiveTintColor: c.primary, tabBarInactiveTintColor: c.muted, tabBarIcon: ({ color, size }) => { const Icon = icons[route.name as keyof typeof icons]; return <Icon color={color} size={size} />; } })}><Tabs.Screen name="index" options={{ title: 'Home', tabBarAccessibilityLabel: 'Home dashboard' }} /><Tabs.Screen name="projects" options={{ title: 'Projects' }} /><Tabs.Screen name="tasks" options={{ title: 'Tasks' }} /><Tabs.Screen name="calendar" options={{ title: 'Calendar' }} /><Tabs.Screen name="more" options={{ title: 'More' }} /></Tabs>; }

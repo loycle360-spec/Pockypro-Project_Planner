@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Pocket Project",
+    "slug": "pocket-project",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "pocketproject",
+    "android": {
+      "package": "com.origentek.pocketproject",
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "plugins": ["expo-router", "expo-sqlite", ["expo-build-properties", { "android": { "compileSdkVersion": 36, "targetSdkVersion": 36, "buildToolsVersion": "36.0.0" } }]],
+    "experiments": { "typedRoutes": true },
+    "extra": { "eas": { "projectId": "REPLACE_WITH_EAS_PROJECT_ID" } }
+  }
+}

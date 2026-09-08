@@ -1,0 +1,4 @@
+import { ScrollView, Text, View } from 'react-native';
+import { Link } from 'expo-router';
+import { Card, useTheme } from '@/components/ui';
+export default function More() { const c = useTheme(); return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, gap: 12, backgroundColor: c.background, flexGrow: 1 }}><Card><Text selectable style={{ color: c.text, fontSize: 18, fontWeight: '800' }}>Settings</Text><Text selectable style={{ color: c.muted }}>Notifications, export and backup controls will stay local to this device.</Text></Card><Link href="/more/about" asChild><View><Card><Text selectable style={{ color: c.primary, fontWeight: '800', fontSize: 17 }}>About ORIGENTEK</Text><Text selectable style={{ color: c.muted }}>Pocket Project version 1.0.0 (build 1)</Text></Card></View></Link></ScrollView>; }
