@@ -1,9 +1,37 @@
 import { useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, ScrollView, Text } from 'react-native';
 import { router } from 'expo-router';
-import { Button, useTheme } from '@/components/ui';
+import { Button, Field, useTheme } from '@/components/ui';
 import { validateProject } from '@/src/lib/validation';
 import { useProjectStore } from '@/src/stores/project-store';
 import type { ProjectDraft } from '@/src/types/project';
+
 const initial: ProjectDraft = { name: '', description: '', purpose: '', problem: '', objectives: '', successCriteria: '', sponsor: '', projectManager: '', startDate: null, targetDate: null, methodology: 'Hybrid', status: 'Planning', priority: 'Medium' };
-export default function NewProject() { const [draft, setDraft] = useState(initial); const [saving, setSaving] = useState(false); const create = useProjectStore((s) => s.create); const c = useTheme(); const field = (label: string, key: keyof ProjectDraft, multiline = false) => <View style={{ gap: 6 }}><Text selectable style={{ color: c.text, fontWeight: '700' }}>{label}</Text><TextInput accessibilityLabel={label} value={String(draft[key] ?? '')} onChangeText={(value) => setDraft((old) => ({ ...old, [key]: value }))} multiline={multiline} placeholder={label} placeholderTextColor={c.muted} style={{ minHeight: multiline ? 92 : 48, padding: 12, color: c.text, borderWidth: 1, borderColor: c.border, borderRadius: 12, textAlignVertical: multiline ? 'top' : 'center', backgroundColor: c.surface }} /></View>; const save = async () => { const error = validateProject(draft); if (error) return Alert.alert('Check your project', error); setSaving(true); try { const project = await create(draft); router.replace({ pathname: '/projects/[id]', params: { id: project.id } }); } catch (err) { Alert.alert('Unable to save', err instanceof Error ? err.message : 'Unable to save this project.'); } finally { setSaving(false); } }; return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, gap: 16, backgroundColor: c.background }}><Text selectable style={{ color: c.muted }}>Start with the essentials. You can enrich the project brief later.</Text>{field('Project name', 'name')}{field('Description', 'description', true)}{field('Purpose', 'purpose', true)}{field('Objectives', 'objectives', true)}{field('Sponsor', 'sponsor')}{field('Project manager', 'projectManager')}<Button title={saving ? 'Saving…' : 'Create Project'} disabled={saving} onPress={() => void save()} /></ScrollView>; }
+
+export default function NewProject() {
+  const [draft, setDraft] = useState(initial);
+  const [saving, setSaving] = useState(false);
+  const create = useProjectStore((s) => s.create);
+  const c = useTheme();
+  const set = (key: keyof ProjectDraft) => (value: string) => setDraft((old) => ({ ...old, [key]: value }));
+
+  const save = async () => {
+    const error = validateProject(draft);
+    if (error) return Alert.alert('Check your project', error);
+    setSaving(true);
+    try { const project = await create(draft); router.replace({ pathname: '/projects/[id]', params: { id: project.id } }); }
+    catch (err) { Alert.alert('Unable to save', err instanceof Error ? err.message : 'Unable to save this project.'); }
+    finally { setSaving(false); }
+  };
+
+  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, gap: 16, backgroundColor: c.background }}>
+    <Text selectable style={{ color: c.muted }}>Start with the essentials. You can enrich the project brief later.</Text>
+    <Field label="Project name" value={draft.name} onChangeText={set('name')} />
+    <Field label="Description" value={draft.description} onChangeText={set('description')} multiline />
+    <Field label="Purpose" value={draft.purpose} onChangeText={set('purpose')} multiline />
+    <Field label="Objectives" value={draft.objectives} onChangeText={set('objectives')} multiline />
+    <Field label="Sponsor" value={draft.sponsor} onChangeText={set('sponsor')} />
+    <Field label="Project manager" value={draft.projectManager} onChangeText={set('projectManager')} />
+    <Button title={saving ? 'Saving…' : 'Create Project'} disabled={saving} onPress={() => void save()} />
+  </ScrollView>;
+}

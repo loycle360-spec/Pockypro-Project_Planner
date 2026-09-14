@@ -1,5 +1,6 @@
 import type { ProjectHealth } from '@/src/types/project';
 export interface HealthInput { overdueTasks: number; delayedMilestones: number; criticalRisks: number; highPriorityIssues: number; }
+export const isCriticalRisk = (probability: number, impact: number) => probability >= 4 && impact >= 4;
 export interface HealthResult { health: ProjectHealth; factors: string[]; }
 export function calculateProjectHealth(input: HealthInput): HealthResult {
   const factors: string[] = [];
