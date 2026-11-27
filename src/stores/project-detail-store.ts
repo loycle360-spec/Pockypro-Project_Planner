@@ -14,14 +14,20 @@ type State = {
   load: (projectId: string) => Promise<void>;
   addTask: (draft: TaskDraft) => Promise<void>;
   setTaskStatus: (taskId: string, status: TaskStatus) => Promise<void>;
+  removeTask: (taskId: string) => Promise<void>;
   addMilestone: (draft: MilestoneDraft) => Promise<void>;
   setMilestoneStatus: (milestoneId: string, status: MilestoneStatus) => Promise<void>;
+  removeMilestone: (milestoneId: string) => Promise<void>;
   addRisk: (draft: RiskDraft) => Promise<void>;
   setRiskStatus: (riskId: string, status: RiskStatus) => Promise<void>;
+  removeRisk: (riskId: string) => Promise<void>;
   addIssue: (draft: IssueDraft) => Promise<void>;
   setIssueStatus: (issueId: string, status: IssueStatus) => Promise<void>;
+  removeIssue: (issueId: string) => Promise<void>;
   addStakeholder: (draft: StakeholderDraft) => Promise<void>;
+  removeStakeholder: (stakeholderId: string) => Promise<void>;
   addNote: (draft: NoteDraft) => Promise<void>;
+  removeNote: (noteId: string) => Promise<void>;
 };
 
 export const useProjectDetailStore = create<State>((set, get) => {
@@ -53,17 +59,23 @@ export const useProjectDetailStore = create<State>((set, get) => {
 
     addTask: (draft) => runMutation(() => taskRepository.create(get().project!.id, draft), 'Unable to save this task.'),
     setTaskStatus: (taskId, status) => runMutation(() => taskRepository.setStatus(taskId, status), 'Unable to update this task.'),
+    removeTask: (taskId) => runMutation(() => taskRepository.remove(taskId), 'Unable to remove this task.'),
 
     addMilestone: (draft) => runMutation(() => milestoneRepository.create(get().project!.id, draft), 'Unable to save this milestone.'),
     setMilestoneStatus: (milestoneId, status) => runMutation(() => milestoneRepository.setStatus(milestoneId, status), 'Unable to update this milestone.'),
+    removeMilestone: (milestoneId) => runMutation(() => milestoneRepository.remove(milestoneId), 'Unable to remove this milestone.'),
 
     addRisk: (draft) => runMutation(() => riskRepository.create(get().project!.id, draft), 'Unable to save this risk.'),
     setRiskStatus: (riskId, status) => runMutation(() => riskRepository.setStatus(riskId, status), 'Unable to update this risk.'),
+    removeRisk: (riskId) => runMutation(() => riskRepository.remove(riskId), 'Unable to remove this risk.'),
 
     addIssue: (draft) => runMutation(() => issueRepository.create(get().project!.id, draft), 'Unable to save this issue.'),
     setIssueStatus: (issueId, status) => runMutation(() => issueRepository.setStatus(issueId, status), 'Unable to update this issue.'),
+    removeIssue: (issueId) => runMutation(() => issueRepository.remove(issueId), 'Unable to remove this issue.'),
 
     addStakeholder: (draft) => runMutation(() => stakeholderRepository.create(get().project!.id, draft), 'Unable to save this stakeholder.'),
+    removeStakeholder: (stakeholderId) => runMutation(() => stakeholderRepository.remove(stakeholderId), 'Unable to remove this stakeholder.'),
     addNote: (draft) => runMutation(() => noteRepository.create(get().project!.id, draft), 'Unable to save this note.'),
+    removeNote: (noteId) => runMutation(() => noteRepository.remove(noteId), 'Unable to remove this note.'),
   };
 });

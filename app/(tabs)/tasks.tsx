@@ -1,27 +1,38 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Link, useFocusEffect } from 'expo-router';
 import { CheckCircle2, Circle } from 'lucide-react-native';
-import { Card, useTheme } from '@/components/ui';
+import { Card, Field, Segmented, useTheme } from '@/components/ui';
 import { taskRepository } from '@/src/db/task-repository';
 import { projectRepository } from '@/src/db/project-repository';
 import { formatDate, isPast } from '@/src/lib/dates';
 import type { TaskWithProject } from '@/src/types/project';
 
+const filters = ['All', 'Overdue'] as const;
+
 export default function Tasks() {
   const c = useTheme();
   const [tasks, setTasks] = useState<TaskWithProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<(typeof filters)[number]>('All');
 
   const load = useCallback(async () => { setLoading(true); setTasks(await taskRepository.listOpenWithProject()); setLoading(false); }, []);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
   const complete = async (task: TaskWithProject) => { await taskRepository.setStatus(task.id, 'Done'); await projectRepository.recalculateHealth(task.projectId); void load(); };
 
+  const visible = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    return tasks.filter((task) => (!term || task.title.toLowerCase().includes(term) || task.projectName.toLowerCase().includes(term)) && (filter === 'All' || Boolean(task.dueDate && isPast(task.dueDate))));
+  }, [tasks, query, filter]);
+
   return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, gap: 12, backgroundColor: c.background, flexGrow: 1 }}>
     {loading ? <ActivityIndicator color={c.primary} /> : null}
+    {!loading && tasks.length ? <View style={{ gap: 10 }}><Field label="Search" value={query} onChangeText={setQuery} placeholder="Search tasks or projects" /><Segmented label="Show" options={filters} value={filter} onChange={setFilter} /></View> : null}
     {!loading && !tasks.length ? <Card><Text selectable style={{ color: c.text, fontSize: 18, fontWeight: '800' }}>No tasks yet</Text><Text selectable style={{ color: c.muted }}>Create a project first, then add work items from its Plan area.</Text></Card> : null}
-    {tasks.map((task) => <Card key={task.id}>
+    {!loading && tasks.length && !visible.length ? <Card><Text selectable style={{ color: c.muted }}>No tasks match your search.</Text></Card> : null}
+    {visible.map((task) => <Card key={task.id}>
       <Pressable accessibilityRole="button" accessibilityLabel={`Mark ${task.title} as done`} onPress={() => void complete(task)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Circle color={task.dueDate && isPast(task.dueDate) ? c.danger : c.muted} size={20} />
         <View style={{ flex: 1 }}>

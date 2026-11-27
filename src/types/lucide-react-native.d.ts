@@ -15,4 +15,5 @@ declare module 'lucide-react-native' {
   export const ShieldAlert: ComponentType<IconProps>;
   export const CheckCircle2: ComponentType<IconProps>;
   export const Circle: ComponentType<IconProps>;
+  export const Trash2: ComponentType<IconProps>;
 }

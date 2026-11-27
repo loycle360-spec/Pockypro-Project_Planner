@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
-import { CheckCircle2, Circle, Plus } from 'lucide-react-native';
+import { CheckCircle2, Circle, Plus, Trash2 } from 'lucide-react-native';
 import { Button, Card, EmptyRow, Field, HealthBadge, Segmented, useTheme } from '@/components/ui';
 import { projectRepository } from '@/src/db/project-repository';
 import { useProjectDetailStore } from '@/src/stores/project-detail-store';
@@ -19,10 +19,17 @@ function SectionHeader({ title, count, adding, onToggleAdd, theme }: { title: st
   </View>;
 }
 
+function DeleteButton({ label, theme, onConfirm }: { label: string; theme: ReturnType<typeof useTheme>; onConfirm: () => void }) {
+  const confirm = () => Alert.alert('Remove this item?', `${label} will be permanently removed from this project.`, [{ text: 'Cancel', style: 'cancel' }, { text: 'Remove', style: 'destructive', onPress: onConfirm }]);
+  return <Pressable accessibilityRole="button" accessibilityLabel={`Remove ${label}`} onPress={confirm} style={{ padding: 6 }}>
+    <Trash2 color={theme.danger} size={16} />
+  </Pressable>;
+}
+
 export default function ProjectDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, open } = useLocalSearchParams<{ id: string; open?: string }>();
   const c = useTheme();
-  const { project, tasks, milestones, risks, issues, stakeholders, notes, loading, error, load, addTask, setTaskStatus, addMilestone, setMilestoneStatus, addRisk, setRiskStatus, addIssue, setIssueStatus, addStakeholder, addNote } = useProjectDetailStore();
+  const { project, tasks, milestones, risks, issues, stakeholders, notes, loading, error, load, addTask, setTaskStatus, removeTask, addMilestone, setMilestoneStatus, removeMilestone, addRisk, setRiskStatus, removeRisk, addIssue, setIssueStatus, removeIssue, addStakeholder, removeStakeholder, addNote, removeNote } = useProjectDetailStore();
 
   useEffect(() => { if (id) void load(id); }, [id, load]);
 
@@ -49,6 +56,8 @@ export default function ProjectDetail() {
 
   const [addingNote, setAddingNote] = useState(false);
   const [noteBody, setNoteBody] = useState('');
+
+  useEffect(() => { if (open === 'task') setAddingTask(true); else if (open === 'risk') setAddingRisk(true); }, [open]);
 
   const archive = () => Alert.alert('Archive project', 'Archived projects are hidden from your active list but not deleted.', [
     { text: 'Cancel', style: 'cancel' },
@@ -92,13 +101,16 @@ export default function ProjectDetail() {
         <Field label="Due date (YYYY-MM-DD, optional)" value={taskDue} onChangeText={setTaskDue} placeholder="2026-03-01" />
         <Button title="Add task" onPress={() => { const draft = { title: taskTitle, dueDate: taskDue.trim() || null }; const err = validateTask(draft); if (err) return Alert.alert('Check this task', err); void addTask(draft).then(() => { setTaskTitle(''); setTaskDue(''); setAddingTask(false); }); }} />
       </View> : null}
-      {tasks.length ? tasks.map((task) => <Pressable key={task.id} accessibilityRole="button" accessibilityLabel={`Mark ${task.title} as ${task.status === 'Done' ? 'not done' : 'done'}`} onPress={() => void setTaskStatus(task.id, task.status === 'Done' ? 'To Do' : 'Done')} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        {task.status === 'Done' ? <CheckCircle2 color={c.success} size={20} /> : <Circle color={c.muted} size={20} />}
-        <View style={{ flex: 1 }}>
-          <Text selectable style={{ color: c.text, textDecorationLine: task.status === 'Done' ? 'line-through' : 'none' }}>{task.title}</Text>
-          {task.dueDate ? <Text selectable style={{ color: c.muted, fontSize: 12 }}>Due {formatDate(task.dueDate)}</Text> : null}
-        </View>
-      </Pressable>) : <EmptyRow text="No tasks yet." />}
+      {tasks.length ? tasks.map((task) => <View key={task.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Mark ${task.title} as ${task.status === 'Done' ? 'not done' : 'done'}`} onPress={() => void setTaskStatus(task.id, task.status === 'Done' ? 'To Do' : 'Done')} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {task.status === 'Done' ? <CheckCircle2 color={c.success} size={20} /> : <Circle color={c.muted} size={20} />}
+          <View style={{ flex: 1 }}>
+            <Text selectable style={{ color: c.text, textDecorationLine: task.status === 'Done' ? 'line-through' : 'none' }}>{task.title}</Text>
+            {task.dueDate ? <Text selectable style={{ color: c.muted, fontSize: 12 }}>Due {formatDate(task.dueDate)}</Text> : null}
+          </View>
+        </Pressable>
+        <DeleteButton label={task.title} theme={c} onConfirm={() => void removeTask(task.id)} />
+      </View>) : <EmptyRow text="No tasks yet." />}
     </Card>
 
     <Card>
@@ -112,6 +124,7 @@ export default function ProjectDetail() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text selectable style={{ color: c.text, fontWeight: '600', flex: 1 }}>{milestone.name}</Text>
           <Text selectable style={{ color: c.muted, fontSize: 12 }}>{formatDate(milestone.targetDate)}</Text>
+          <DeleteButton label={milestone.name} theme={c} onConfirm={() => void removeMilestone(milestone.id)} />
         </View>
         <Segmented label="Status" options={milestoneStatuses} value={milestone.status} onChange={(status) => void setMilestoneStatus(milestone.id, status)} />
       </View>) : <EmptyRow text="No milestones yet." />}
@@ -126,7 +139,10 @@ export default function ProjectDetail() {
         <Button title="Add risk" onPress={() => { const draft = { risk: riskText, probability: Number(riskProbability), impact: Number(riskImpact) }; const err = validateRisk(draft); if (err) return Alert.alert('Check this risk', err); void addRisk(draft).then(() => { setRiskText(''); setRiskProbability('3'); setRiskImpact('3'); setAddingRisk(false); }); }} />
       </View> : null}
       {risks.length ? risks.map((risk) => <View key={risk.id} style={{ gap: 4 }}>
-        <Text selectable style={{ color: c.text, fontWeight: '600' }}>{risk.risk}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Text selectable style={{ color: c.text, fontWeight: '600', flex: 1 }}>{risk.risk}</Text>
+          <DeleteButton label={risk.risk} theme={c} onConfirm={() => void removeRisk(risk.id)} />
+        </View>
         <Text selectable style={{ color: c.muted, fontSize: 12 }}>Probability {risk.probability} · Impact {risk.impact}</Text>
         <Segmented label="Status" options={riskStatuses} value={risk.status} onChange={(status) => void setRiskStatus(risk.id, status)} />
       </View>) : <EmptyRow text="No risks logged yet." />}
@@ -140,7 +156,10 @@ export default function ProjectDetail() {
         <Button title="Add issue" onPress={() => { const draft = { title: issueTitle, priority: issuePriority }; const err = validateIssue(draft); if (err) return Alert.alert('Check this issue', err); void addIssue(draft).then(() => { setIssueTitle(''); setIssuePriority('Medium'); setAddingIssue(false); }); }} />
       </View> : null}
       {issues.length ? issues.map((issue) => <View key={issue.id} style={{ gap: 4 }}>
-        <Text selectable style={{ color: c.text, fontWeight: '600' }}>{issue.title}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Text selectable style={{ color: c.text, fontWeight: '600', flex: 1 }}>{issue.title}</Text>
+          <DeleteButton label={issue.title} theme={c} onConfirm={() => void removeIssue(issue.id)} />
+        </View>
         <Text selectable style={{ color: c.muted, fontSize: 12 }}>Priority: {issue.priority}</Text>
         <Segmented label="Status" options={issueStatuses} value={issue.status} onChange={(status) => void setIssueStatus(issue.id, status)} />
       </View>) : <EmptyRow text="No issues logged yet." />}
@@ -153,9 +172,12 @@ export default function ProjectDetail() {
         <Field label="Role (optional)" value={stakeholderRole} onChangeText={setStakeholderRole} placeholder="e.g. Sponsor" />
         <Button title="Add stakeholder" onPress={() => { const draft = { name: stakeholderName, role: stakeholderRole }; const err = validateStakeholder(draft); if (err) return Alert.alert('Check this stakeholder', err); void addStakeholder(draft).then(() => { setStakeholderName(''); setStakeholderRole(''); setAddingStakeholder(false); }); }} />
       </View> : null}
-      {stakeholders.length ? stakeholders.map((stakeholder) => <View key={stakeholder.id}>
-        <Text selectable style={{ color: c.text, fontWeight: '600' }}>{stakeholder.name}</Text>
-        {stakeholder.role ? <Text selectable style={{ color: c.muted, fontSize: 12 }}>{stakeholder.role}</Text> : null}
+      {stakeholders.length ? stakeholders.map((stakeholder) => <View key={stakeholder.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={{ flex: 1 }}>
+          <Text selectable style={{ color: c.text, fontWeight: '600' }}>{stakeholder.name}</Text>
+          {stakeholder.role ? <Text selectable style={{ color: c.muted, fontSize: 12 }}>{stakeholder.role}</Text> : null}
+        </View>
+        <DeleteButton label={stakeholder.name} theme={c} onConfirm={() => void removeStakeholder(stakeholder.id)} />
       </View>) : <EmptyRow text="No stakeholders added yet." />}
     </Card>
 
@@ -165,9 +187,12 @@ export default function ProjectDetail() {
         <Field label="Note" value={noteBody} onChangeText={setNoteBody} placeholder="Add a note for this project" multiline />
         <Button title="Add note" onPress={() => { const draft = { body: noteBody }; const err = validateNote(draft); if (err) return Alert.alert('Check this note', err); void addNote(draft).then(() => { setNoteBody(''); setAddingNote(false); }); }} />
       </View> : null}
-      {notes.length ? notes.map((note) => <View key={note.id} style={{ gap: 2 }}>
-        <Text selectable style={{ color: c.text }}>{note.body}</Text>
-        <Text selectable style={{ color: c.muted, fontSize: 11 }}>{formatDate(note.createdAt.slice(0, 10))}</Text>
+      {notes.length ? notes.map((note) => <View key={note.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text selectable style={{ color: c.text }}>{note.body}</Text>
+          <Text selectable style={{ color: c.muted, fontSize: 11 }}>{formatDate(note.createdAt.slice(0, 10))}</Text>
+        </View>
+        <DeleteButton label="This note" theme={c} onConfirm={() => void removeNote(note.id)} />
       </View>) : <EmptyRow text="No notes yet." />}
     </Card>
 
