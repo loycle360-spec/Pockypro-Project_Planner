@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { CheckCircle2, Circle, Plus, Trash2 } from 'lucide-react-native';
 import { Button, Card, EmptyRow, Field, HealthBadge, Segmented, useTheme } from '@/components/ui';
 import { projectRepository } from '@/src/db/project-repository';
@@ -75,7 +75,7 @@ export default function ProjectDetail() {
       <HealthBadge health={project.health} />
       <Text selectable style={{ color: c.muted }}>{project.description || 'No description has been added.'}</Text>
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Link href={{ pathname: '/projects/edit/[id]', params: { id: project.id } }} asChild><View style={{ flex: 1 }}><Button title="Edit" variant="secondary" onPress={() => {}} /></View></Link>
+        <View style={{ flex: 1 }}><Button title="Edit" variant="secondary" onPress={() => router.push({ pathname: '/projects/edit/[id]', params: { id: project.id } })} /></View>
         <View style={{ flex: 1 }}><Button title="Archive" variant="secondary" onPress={archive} /></View>
       </View>
     </Card>

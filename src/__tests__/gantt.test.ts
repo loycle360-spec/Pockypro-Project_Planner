@@ -21,6 +21,12 @@ describe('gantt rows', () => {
     const rows = buildGanttRows([project({ startDate: null, targetDate: null })], [task()], [milestone()], '2026-03-05');
     expect([rows[0]?.start, rows[0]?.end]).toEqual(['2026-03-10', '2026-03-20']);
   });
+  it('skips invalid stored dates so the schedule remains usable', () => {
+    const rows = buildGanttRows([project({ startDate: 'bad', targetDate: null })], [task({ dueDate: 'tomorrow' })], [], '2026-03-05');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.start).toBeNull();
+    expect(computeScale(rows, '2026-03-05').totalDays).toBe(15);
+  });
   it('skips undated tasks', () => {
     expect(buildGanttRows([project()], [task({ dueDate: null })], [], '2026-03-05')).toHaveLength(1);
   });

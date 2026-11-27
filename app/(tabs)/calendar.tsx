@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { Link, useFocusEffect } from 'expo-router';
 import { Gantt } from '@/components/gantt';
 import { Card, TableHeader, useTheme } from '@/components/ui';
@@ -41,11 +41,11 @@ export default function Calendar() {
       </View>
       {dated.length ? <View>
         <TableHeader columns={[{ label: 'Due', width: 96 }, { label: 'Name', flex: 1 }, { label: 'Type', width: 80 }]} />
-        {dated.map((row) => <Link key={row.key} href={{ pathname: '/projects/[id]', params: { id: row.projectId } }} asChild><View accessibilityRole="link" style={{ flexDirection: 'row', backgroundColor: c.surface, borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: c.border }}>
+        {dated.map((row) => <Link key={row.key} href={{ pathname: '/projects/[id]', params: { id: row.projectId } }} asChild><Pressable accessibilityRole="link" style={{ flexDirection: 'row', backgroundColor: c.surface, borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: c.border }}>
           <Text style={{ width: 96, padding: 8, fontSize: 12, color: isPast(row.end) ? c.danger : c.text }}>{formatDate(row.end)}</Text>
           <Text style={{ flex: 1, padding: 8, fontSize: 12, color: c.text, borderLeftWidth: 1, borderLeftColor: c.grid }}>{row.name}</Text>
           <Text style={{ width: 80, padding: 8, fontSize: 12, color: c.muted, borderLeftWidth: 1, borderLeftColor: c.grid }}>{row.kind === 'milestone' ? 'Milestone' : 'Task'}{row.critical ? ' ⚑' : ''}</Text>
-        </View></Link>)}
+        </Pressable></Link>)}
       </View> : null}
     </> : null}
   </ScrollView>;

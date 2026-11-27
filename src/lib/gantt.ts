@@ -1,3 +1,4 @@
+import { isValidDateKey } from '@/src/lib/dates';
 import type { Milestone, Project, Task } from '@/src/types/project';
 
 export type GanttKind = 'summary' | 'task' | 'milestone';
@@ -15,11 +16,11 @@ export function buildGanttRows(projects: Project[], tasks: Task[], milestones: M
   const rows: GanttRow[] = [];
   projects.forEach((project, i) => {
     const children: GanttRow[] = [
-      ...tasks.filter((t) => t.projectId === project.id && t.dueDate).map((t): GanttRow => ({ key: `task-${t.id}`, wbs: '', name: t.title, kind: 'task', start: t.dueDate, end: t.dueDate, critical: Boolean(t.dueDate && t.dueDate < today), projectId: project.id })),
-      ...milestones.filter((m) => m.projectId === project.id && m.targetDate).map((m): GanttRow => ({ key: `milestone-${m.id}`, wbs: '', name: m.name, kind: 'milestone', start: m.targetDate, end: m.targetDate, critical: Boolean(m.targetDate && m.targetDate < today && m.status === 'Planned'), projectId: project.id })),
+      ...tasks.filter((t) => t.projectId === project.id && isValidDateKey(t.dueDate)).map((t): GanttRow => ({ key: `task-${t.id}`, wbs: '', name: t.title, kind: 'task', start: t.dueDate, end: t.dueDate, critical: Boolean(t.dueDate && t.dueDate < today), projectId: project.id })),
+      ...milestones.filter((m) => m.projectId === project.id && isValidDateKey(m.targetDate)).map((m): GanttRow => ({ key: `milestone-${m.id}`, wbs: '', name: m.name, kind: 'milestone', start: m.targetDate, end: m.targetDate, critical: Boolean(m.targetDate && m.targetDate < today && m.status === 'Planned'), projectId: project.id })),
     ].sort((a, b) => (a.start ?? '').localeCompare(b.start ?? ''));
-    const dates = [project.startDate, project.targetDate, ...children.map((c) => c.start)].filter((d): d is string => Boolean(d)).sort();
-    rows.push({ key: `project-${project.id}`, wbs: String(i + 1), name: project.name, kind: 'summary', start: project.startDate ?? dates[0] ?? null, end: project.targetDate ?? dates[dates.length - 1] ?? null, critical: false, projectId: project.id });
+    const dates = [project.startDate, project.targetDate, ...children.map((c) => c.start)].filter(isValidDateKey).sort();
+    rows.push({ key: `project-${project.id}`, wbs: String(i + 1), name: project.name, kind: 'summary', start: (isValidDateKey(project.startDate) ? project.startDate : null) ?? dates[0] ?? null, end: (isValidDateKey(project.targetDate) ? project.targetDate : null) ?? dates[dates.length - 1] ?? null, critical: false, projectId: project.id });
     children.forEach((child, j) => rows.push({ ...child, wbs: `${i + 1}.${j + 1}` }));
   });
   return rows;

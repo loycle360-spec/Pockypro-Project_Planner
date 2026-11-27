@@ -36,13 +36,15 @@ export default function Tasks() {
       <TableHeader columns={[{ label: 'ID', width: 36 }, { label: 'Task Name', flex: 1 }, { label: 'Due', width: 92 }]} />
       {visible.map((task, i) => { const late = Boolean(task.dueDate && isPast(task.dueDate)); return <View key={task.id} style={{ flexDirection: 'row', alignItems: 'stretch', backgroundColor: c.surface, borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: c.border }}>
         <Text style={{ width: 36, padding: 8, fontSize: 12, color: c.muted }}>{i + 1}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Mark ${task.title} as done`} onPress={() => void complete(task)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, borderLeftWidth: 1, borderLeftColor: c.grid }}>
-          {late ? <Circle color={c.danger} size={16} /> : <Circle color={c.muted} size={16} />}
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, borderLeftWidth: 1, borderLeftColor: c.grid }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Mark ${task.title} as done`} onPress={() => void complete(task)} style={{ minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }}>
+            <Circle color={late ? c.danger : c.muted} size={20} />
+          </Pressable>
           <View style={{ flex: 1 }}>
             <Text selectable style={{ color: late ? c.danger : c.text, fontSize: 13, fontWeight: '600' }}>{task.title}</Text>
-            <Link href={{ pathname: '/projects/[id]', params: { id: task.projectId } }}><Text selectable style={{ color: c.primary, fontSize: 11 }}>{task.projectName}</Text></Link>
+            <Link href={{ pathname: '/projects/[id]', params: { id: task.projectId } }}><Text style={{ color: c.primary, fontSize: 12 }}>{task.projectName}</Text></Link>
           </View>
-        </Pressable>
+        </View>
         <Text style={{ width: 92, padding: 8, fontSize: 12, color: late ? c.danger : c.text, borderLeftWidth: 1, borderLeftColor: c.grid }}>{task.dueDate ? formatDate(task.dueDate) : '—'}</Text>
       </View>; })}
     </View> : null}
