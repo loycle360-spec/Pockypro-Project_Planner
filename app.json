@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Pocket Project",
-    "slug": "pocket-project",
+    "slug": "pocket-project-p1",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -11,8 +11,29 @@
       "versionCode": 1,
       "softwareKeyboardLayoutMode": "pan"
     },
-    "plugins": ["expo-router", "expo-sqlite", ["expo-build-properties", { "android": { "compileSdkVersion": 36, "targetSdkVersion": 36, "buildToolsVersion": "36.0.0" } }]],
-    "experiments": { "typedRoutes": true },
-    "extra": { "eas": { "projectId": "REPLACE_WITH_EAS_PROJECT_ID" } }
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "53e4fa91-c177-4cd8-9571-de95959ddf25"
+      },
+      "router": {}
+    },
+    "owner": "origentechappdev"
   }
 }
