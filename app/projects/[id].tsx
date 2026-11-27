@@ -13,7 +13,7 @@ import type { ProjectPriority } from '@/src/types/project';
 function SectionHeader({ title, count, adding, onToggleAdd, theme }: { title: string; count: number; adding: boolean; onToggleAdd: () => void; theme: ReturnType<typeof useTheme> }) {
   return <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
     <Text selectable style={{ color: theme.text, fontWeight: '800', fontSize: 16 }}>{title} ({count})</Text>
-    <Pressable accessibilityRole="button" accessibilityLabel={`Add ${title.toLowerCase()}`} onPress={onToggleAdd} style={{ padding: 6, borderRadius: 99, backgroundColor: adding ? theme.tint : 'transparent' }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`Add ${title.toLowerCase()}`} onPress={onToggleAdd} style={{ padding: 6, borderRadius: 2, backgroundColor: adding ? theme.tint : 'transparent' }}>
       <Plus color={theme.primary} size={20} />
     </Pressable>
   </View>;

@@ -1,39 +1,52 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { Link, useFocusEffect } from 'expo-router';
-import { Card, useTheme } from '@/components/ui';
+import { Gantt } from '@/components/gantt';
+import { Card, TableHeader, useTheme } from '@/components/ui';
+import { projectRepository } from '@/src/db/project-repository';
 import { taskRepository } from '@/src/db/task-repository';
 import { milestoneRepository } from '@/src/db/milestone-repository';
-import { formatDate, isPast } from '@/src/lib/dates';
-import type { MilestoneWithProject, TaskWithProject } from '@/src/types/project';
-
-type Entry = { key: string; date: string; label: string; kind: 'Task' | 'Milestone'; projectId: string; projectName: string };
+import { todayKey, formatDate, isPast } from '@/src/lib/dates';
+import { buildGanttRows } from '@/src/lib/gantt';
+import type { Milestone, Project, Task } from '@/src/types/project';
 
 export default function Calendar() {
   const c = useTheme();
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [tasks, milestones] = await Promise.all([taskRepository.listOpenWithProject(), milestoneRepository.listUpcomingWithProject()]);
-    const taskEntries: Entry[] = tasks.filter((t): t is TaskWithProject & { dueDate: string } => Boolean(t.dueDate)).map((t) => ({ key: `task-${t.id}`, date: t.dueDate, label: t.title, kind: 'Task', projectId: t.projectId, projectName: t.projectName }));
-    const milestoneEntries: Entry[] = milestones.filter((m): m is MilestoneWithProject & { targetDate: string } => Boolean(m.targetDate)).map((m) => ({ key: `milestone-${m.id}`, date: m.targetDate, label: m.name, kind: 'Milestone', projectId: m.projectId, projectName: m.projectName }));
-    setEntries([...taskEntries, ...milestoneEntries].sort((a, b) => a.date.localeCompare(b.date)));
-    setLoading(false);
+    const [p, t, m] = await Promise.all([projectRepository.list(), taskRepository.listOpenWithProject(), milestoneRepository.listUpcomingWithProject()]);
+    setProjects(p); setTasks(t); setMilestones(m); setLoading(false);
   }, []);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
-  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, gap: 12, backgroundColor: c.background, flexGrow: 1 }}>
+  const today = todayKey();
+  const rows = useMemo(() => buildGanttRows(projects, tasks, milestones, today), [projects, tasks, milestones, today]);
+  const dated = rows.filter((r) => r.kind !== 'summary');
+  const hasBars = rows.some((r) => r.start);
+
+  const Legend = ({ color, label, diamond = false }: { color: string; label: string; diamond?: boolean }) => <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: diamond ? 10 : 14, height: diamond ? 10 : 8, backgroundColor: color, transform: diamond ? [{ rotate: '45deg' }] : undefined }} /><Text style={{ color: c.muted, fontSize: 11 }}>{label}</Text></View>;
+
+  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 12, gap: 12, backgroundColor: c.background, flexGrow: 1 }}>
     {loading ? <ActivityIndicator color={c.primary} /> : null}
-    {!loading && !entries.length ? <Card><Text selectable style={{ color: c.text, fontWeight: '800', fontSize: 18 }}>Your calendar is clear</Text><Text selectable style={{ color: c.muted }}>Task due dates and milestones will appear here and remain available offline.</Text></Card> : null}
-    {entries.map((entry) => <Link key={entry.key} href={{ pathname: '/projects/[id]', params: { id: entry.projectId } }} asChild><Card>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text selectable style={{ color: entry.date && isPast(entry.date) ? c.danger : c.text, fontWeight: '700' }}>{formatDate(entry.date)}</Text>
-        <Text selectable style={{ color: c.muted, fontSize: 12 }}>{entry.kind}{isPast(entry.date) ? ' · Overdue' : ''}</Text>
+    {!loading && !hasBars ? <Card><Text selectable style={{ color: c.text, fontWeight: '700', fontSize: 16 }}>Your schedule is clear</Text><Text selectable style={{ color: c.muted }}>Project dates, task due dates and milestones appear here as a Gantt chart and remain available offline.</Text></Card> : null}
+    {!loading && hasBars ? <>
+      <Gantt rows={rows} today={today} />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
+        <Legend color={c.summaryBar} label="Project" /><Legend color={c.taskBar} label="Task" /><Legend color={c.criticalBar} label="Overdue" /><Legend color={c.summaryBar} label="Milestone" diamond /><Legend color={c.today} label="Today" />
       </View>
-      <Text selectable style={{ color: c.text }}>{entry.label}</Text>
-      <Text selectable style={{ color: c.muted, fontSize: 12 }}>{entry.projectName}</Text>
-    </Card></Link>)}
+      {dated.length ? <View>
+        <TableHeader columns={[{ label: 'Due', width: 96 }, { label: 'Name', flex: 1 }, { label: 'Type', width: 80 }]} />
+        {dated.map((row) => <Link key={row.key} href={{ pathname: '/projects/[id]', params: { id: row.projectId } }} asChild><View accessibilityRole="link" style={{ flexDirection: 'row', backgroundColor: c.surface, borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: c.border }}>
+          <Text style={{ width: 96, padding: 8, fontSize: 12, color: isPast(row.end) ? c.danger : c.text }}>{formatDate(row.end)}</Text>
+          <Text style={{ flex: 1, padding: 8, fontSize: 12, color: c.text, borderLeftWidth: 1, borderLeftColor: c.grid }}>{row.name}</Text>
+          <Text style={{ width: 80, padding: 8, fontSize: 12, color: c.muted, borderLeftWidth: 1, borderLeftColor: c.grid }}>{row.kind === 'milestone' ? 'Milestone' : 'Task'}{row.critical ? ' ⚑' : ''}</Text>
+        </View></Link>)}
+      </View> : null}
+    </> : null}
   </ScrollView>;
 }
