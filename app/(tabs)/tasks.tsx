@@ -27,15 +27,16 @@ export default function Tasks() {
     return tasks.filter((task) => (!term || task.title.toLowerCase().includes(term) || task.projectName.toLowerCase().includes(term)) && (filter === 'All' || Boolean(task.dueDate && isPast(task.dueDate))));
   }, [tasks, query, filter]);
 
-  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, gap: 12, backgroundColor: c.background, flexGrow: 1 }}>
+  return <ScrollView contentInsetAdjustmentBehavior="automatic" showsVerticalScrollIndicator contentContainerStyle={{ padding: 16, gap: 12, backgroundColor: c.background, flexGrow: 1 }}>
     {loading ? <ActivityIndicator color={c.primary} /> : null}
     {!loading && tasks.length ? <View style={{ gap: 10 }}><Field label="Search" value={query} onChangeText={setQuery} placeholder="Search tasks or projects" /><Segmented label="Show" options={filters} value={filter} onChange={setFilter} /></View> : null}
     {!loading && !tasks.length ? <Card><Text selectable style={{ color: c.text, fontSize: 18, fontWeight: '800' }}>No tasks yet</Text><Text selectable style={{ color: c.muted }}>Create a project first, then add work items from its Plan area.</Text></Card> : null}
     {!loading && tasks.length && !visible.length ? <Card><Text selectable style={{ color: c.muted }}>No tasks match your search.</Text></Card> : null}
-    {visible.length ? <View>
-      <TableHeader columns={[{ label: 'ID', width: 36 }, { label: 'Task Name', flex: 1 }, { label: 'Due', width: 92 }]} />
-      {visible.map((task, i) => { const late = Boolean(task.dueDate && isPast(task.dueDate)); return <View key={task.id} style={{ flexDirection: 'row', alignItems: 'stretch', backgroundColor: c.surface, borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: c.border }}>
-        <Text style={{ width: 36, padding: 8, fontSize: 12, color: c.muted }}>{i + 1}</Text>
+    {visible.length ? <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ minWidth: 430 }}><View style={{ flex: 1 }}>
+      <TableHeader columns={[{ label: 'Task ID', width: 72 }, { label: 'WBS ID', width: 64 }, { label: 'Task Name', flex: 1 }, { label: 'Due', width: 92 }]} />
+      {visible.map((task) => { const late = Boolean(task.dueDate && isPast(task.dueDate)); return <View key={task.id} style={{ flexDirection: 'row', alignItems: 'stretch', backgroundColor: c.surface, borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: c.border }}>
+        <Text style={{ width: 72, padding: 8, fontSize: 12, color: c.muted }}>{task.taskCode}</Text>
+        <Text style={{ width: 64, padding: 8, fontSize: 12, color: c.muted, borderLeftWidth: 1, borderLeftColor: c.grid }}>{task.wbsId}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={`Mark ${task.title} as done`} onPress={() => void complete(task)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, borderLeftWidth: 1, borderLeftColor: c.grid }}>
           {late ? <Circle color={c.danger} size={16} /> : <Circle color={c.muted} size={16} />}
           <View style={{ flex: 1 }}>
@@ -45,6 +46,6 @@ export default function Tasks() {
         </Pressable>
         <Text style={{ width: 92, padding: 8, fontSize: 12, color: late ? c.danger : c.text, borderLeftWidth: 1, borderLeftColor: c.grid }}>{task.dueDate ? formatDate(task.dueDate) : '—'}</Text>
       </View>; })}
-    </View> : null}
+    </View></ScrollView> : null}
   </ScrollView>;
 }

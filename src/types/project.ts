@@ -14,7 +14,7 @@ export interface Project {
 export type ProjectDraft = Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'archived' | 'health'>;
 
 export type TaskStatus = 'To Do' | 'In Progress' | 'Done';
-export interface Task { id: string; projectId: string; title: string; status: TaskStatus; dueDate: string | null; completedAt: string | null; }
+export interface Task { id: string; projectId: string; taskCode: string; wbsId: string; title: string; status: TaskStatus; dueDate: string | null; completedAt: string | null; }
 export type TaskDraft = { title: string; dueDate: string | null };
 export interface TaskWithProject extends Task { projectName: string; }
 
