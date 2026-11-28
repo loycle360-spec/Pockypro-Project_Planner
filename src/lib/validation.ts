@@ -8,6 +8,7 @@ export function validateProject(draft: ProjectDraft): string | null {
 
 export function validateTask(draft: TaskDraft): string | null {
   if (!draft.title.trim()) return 'Enter a task title.';
+  if (draft.dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(draft.dueDate)) return 'Enter a valid due date.';
   return null;
 }
 

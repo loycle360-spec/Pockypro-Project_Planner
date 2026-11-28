@@ -2,7 +2,7 @@ import { buildGanttRows, buildTimescale, computeScale, offsetOf } from '@/src/li
 import type { Milestone, Project, Task } from '@/src/types/project';
 
 const project = (over: Partial<Project> = {}): Project => ({ id: 'p1', name: 'Boiler', description: '', purpose: '', problem: '', objectives: '', successCriteria: '', sponsor: '', projectManager: '', startDate: '2026-03-01', targetDate: '2026-03-31', methodology: 'Hybrid', status: 'In Progress', priority: 'Medium', health: 'Healthy', createdAt: '', updatedAt: '', archived: false, ...over });
-const task = (over: Partial<Task> = {}): Task => ({ id: 't1', projectId: 'p1', title: 'Install', status: 'To Do', dueDate: '2026-03-10', completedAt: null, ...over });
+const task = (over: Partial<Task> = {}): Task => ({ id: 't1', projectId: 'p1', taskCode: 'T-001', wbsId: '1.1', title: 'Install', status: 'To Do', dueDate: '2026-03-10', completedAt: null, ...over });
 const milestone = (over: Partial<Milestone> = {}): Milestone => ({ id: 'm1', projectId: 'p1', name: 'Handover', targetDate: '2026-03-20', status: 'Planned', ...over });
 
 describe('gantt rows', () => {

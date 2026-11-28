@@ -24,7 +24,7 @@ export default function NewProject() {
     finally { setSaving(false); }
   };
 
-  return <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, gap: 16, backgroundColor: c.background }}>
+  return <ScrollView contentInsetAdjustmentBehavior="automatic" showsVerticalScrollIndicator contentContainerStyle={{ padding: 16, gap: 16, backgroundColor: c.background }}>
     <Text selectable style={{ color: c.muted }}>Start with the essentials. You can enrich the project brief later.</Text>
     <Field label="Project name" value={draft.name} onChangeText={set('name')} />
     <Field label="Description" value={draft.description} onChangeText={set('description')} multiline />
